@@ -1,0 +1,413 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"rota",
+				"rotationAngle"
+			],
+			[
+				"rot",
+				"rotationAngle"
+			],
+			[
+				"sub",
+				"subdivisionCount〔variable〕"
+			],
+			[
+				"init",
+				"initialTriangle"
+			],
+			[
+				"gener",
+				"generatePolygonTriangles"
+			],
+			[
+				"generate",
+				"generatePolygonVertices"
+			],
+			[
+				"Num",
+				"NumTimesToSubdivide〔variable〕"
+			],
+			[
+				"gettasks",
+				"getTasksByUser〔function〕"
+			],
+			[
+				"gettask",
+				"getTasksByUser"
+			],
+			[
+				"auth",
+				"authenticationservice"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "<!DOCTYPE html>\n<html>\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" >\n<title>2D Sierpinski Gasket</title>\n\n\n<script id=\"vertex-shader\" type=\"x-shader/x-vertex\">\nattribute vec4 vPosition;\n\nvoid\nmain()\n{\n    gl_Position = vPosition;\n}\n</script>\n\n<script id=\"fragment-shader\" type=\"x-shader/x-fragment\">\nprecision mediump float;\n\nvoid\nmain()\n{\n    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}\n</script>\n\n<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js\"></script>\n<script type=\"text/javascript\" src=\"../common/webgl-utils.js\"></script>\n<script type=\"text/javascript\" src=\"../common/initShaders.js\"></script>\n<script type=\"text/javascript\" src=\"../common/MV.js\"></script>\n<script type=\"text/javascript\" src=\"renderer.js\"></script>\n<script type=\"text/javascript\" src=\"shape-manipulator.js\"></script>\n</head>   \n\n<body>\n	<div>\n		Number of subdivisions:\n		<input type=\"text\" id=\"txtSubdivisionCount\" value=\"5\"/>\n	</div>\n	<div>\n		Angle\n		<input type=\"text\" id=\"txtAngle\" value=\"0\"/>\n	</div>\n	<div>\n		<input type=\"button\" id=\"btnRedraw\" value=\"Redraw\"/>\n	</div>\n<canvas id=\"gl-canvas\" width=\"512\" height=\"512\">\nOops ... your browser doesn't support the HTML5 canvas element\n</canvas>\n\n<script>\n  $(document).ready(function() {\n  	Draw();\n\n    $(\"#btnRedraw\").click(function () {\n    	Draw();\n    });\n  });\n\n  function Draw()\n  {\n  	var canvas = $(\"#gl-canvas\")[0];\n  	var subDivisionCount = $(\"#txtSubdivisionCount\").val();\n  	var angle = $(\"#txtAngle\").val();\n\n    shapeManipulator.initTriangle();\n    var result = shapeManipulator.tessellateTriangle(subDivisionCount, angle);\n  	renderer.draw(canvas, result.points, result.lines);\n  }\n</script>\n</body>\n</html>\n",
+			"file": "assignment-one/index.html",
+			"file_size": 1852,
+			"file_write_time": 130816526135745786,
+			"settings":
+			{
+				"buffer_size": 1711,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "assignment-one/renderer.js",
+			"settings":
+			{
+				"buffer_size": 1760,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "var shapeManipulator = new function () {\n	var triangle = [];\n	var points = [];\n	var lines = [];\n\n	initTriangle = function () {\n		// triangle = [\n		// 		        vec2( 0, 0 ),\n		// 		        vec2( -0.5,  0.5 ),\n		// 		        vec2( -0.5, -0.5 )\n		// 		   	];\n\n		// triangle = [\n		//    vec2(Math.sin(2.0 * Math.PI / 3.0 * 0), Math.cos(2.0 * Math.PI / 3.0 * 0)),\n		//    vec2(Math.sin(2.0 * Math.PI / 3.0 * 1), Math.cos(2.0 * Math.PI / 3.0 * 1)),\n		//    vec2(Math.sin(2.0 * Math.PI / 3.0 * 2), Math.cos(2.0 * Math.PI / 3.0 * 2))\n		// ];\n		triangle = [\n		   [Math.sin(2.0 * Math.PI / 3.0 * 0), Math.cos(2.0 * Math.PI / 3.0 * 0)],\n		   [Math.sin(2.0 * Math.PI / 3.0 * 1), Math.cos(2.0 * Math.PI / 3.0 * 1)],\n		   [Math.sin(2.0 * Math.PI / 3.0 * 2), Math.cos(2.0 * Math.PI / 3.0 * 2)]\n		];\n	};\n\n	tessellateTriangle = function (subdivisionCount, rotationAngle) {\n		points = [];\n		lines = [];\n		divideTriangle( triangle, subdivisionCount, rotationAngle);\n		return { points: points, lines: lines };\n	};\n\n	function divideTriangle( triangle, count, rotationAngle )\n	{\n		var a = triangle[0];\n		var b = triangle[1];\n		var c = triangle[2];\n\n	    // check for end of recursion\n	    if ( count == 0 ) {\n	    	var aPrime = rotate(a, rotationAngle);\n	    	var bPrime = rotate(b, rotationAngle);\n	    	var cPrime = rotate(c, rotationAngle);\n	    	\n	    	points.push( aPrime, bPrime, cPrime );\n	    	lines.push(aPrime, bPrime, bPrime, cPrime, cPrime, aPrime);\n	    }\n	    else {\n\n	        //bisect the sides\n	        var ab = mix( a, b, 0.5 );\n	        var ac = mix( a, c, 0.5 );\n	        var bc = mix( b, c, 0.5 );\n\n	        --count;\n\n	        // four new triangles\n	        divideTriangle( [a, ab, ac], count, rotationAngle );\n	        divideTriangle( [c, ac, bc], count, rotationAngle );\n	        divideTriangle( [b, bc, ab], count, rotationAngle );\n	        divideTriangle( [ab, ac, bc], count, rotationAngle );\n	    }\n	}\n\n	function rotate(v, theta)\n	{\n	    var x = v[0];\n	    var y = v[1];\n	    //var d = Math.sqrt(x*x + y*y);\n	    var d = Math.pow(Math.pow(x, 2) + Math.pow(y, 2), 0.5);\n\n	    //theta * Math.PI/180\n	    var rotationAngle = theta * d * 0.05;\n\n	    var xPrime = x * Math.cos(rotationAngle) - y * Math.sin(rotationAngle);\n	    var yPrime = x * Math.sin(rotationAngle) - y * Math.cos(rotationAngle);\n\n	    return [xPrime, yPrime];\n	}\n\n	return {\n		initTriangle: initTriangle,\n		tessellateTriangle: tessellateTriangle\n	}\n} ();",
+			"file": "assignment-one/shape-manipulator.js",
+			"file_size": 4368,
+			"file_write_time": 130816556784871155,
+			"settings":
+			{
+				"buffer_size": 2424,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 35.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"package",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 528.0
+	},
+	"console":
+	{
+		"height": 126.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'eb2297e1a458f27d836c04bb0cbaf282' + 'd0e7a3098092775ccb37ca9d6b2e4b7d'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/C/xampp/htdocs/webGL",
+		"/C/xampp/htdocs/webGL/assignment-one",
+		"/C/xampp/htdocs/webGL/common"
+	],
+	"file_history":
+	[
+		"/C/xampp/htdocs/webGL/common/MV.js",
+		"/C/xampp/htdocs/webGL/gasket2.js",
+		"/C/xampp/htdocs/webGL/common/initShaders.js",
+		"/C/xampp/htdocs/webGL/common/initShaders2.js",
+		"/C/xampp/htdocs/webGL/gasket2.html",
+		"/C/xampp/htdocs/webGL/common/webgl-utils.js",
+		"/C/xampp/htdocs/webGL/square.html",
+		"/C/xampp/htdocs/webGL/square.js",
+		"/C/xampp/htdocs/webGL/square2.html",
+		"/C/xampp/htdocs/EncoreGroup/erassure/includes/DatabaseTable.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/Application.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/includes/Model.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/ExecutorInsurance.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/overrideNonCalc/overrideNonCalc_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/overrideNonCalc/overrideNonCalc_head.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/overrideNonCalc/overrideNonCalc_bottom.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/details/details_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/details/details_bottom.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/details/details_head.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/controllers/application.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/Solicitor.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/ACL.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/includes/mvc.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/summary/summary_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/viewSummary/viewSummary_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/meta/meta_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/Entity.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/includes/Response.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/system/start_form/start_form_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/page.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/liability.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/html.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/header.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/gotopage.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/country.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/date.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/EntityConfig.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/FlowEntity.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/index/index_head.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/index/index_content.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/views/application/addNote/addNote_head.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/tests/controllers/fixtures/ApplicationController.xml",
+		"/C/xampp/htdocs/EncoreGroup/erassure/tests/controllers/ApplicationControllerTest.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/sql/ins_applications.sql",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/address.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/models/User.php",
+		"/C/xampp/htdocs/EncoreGroup/erassure/plugins/entitytypes/model.php",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/index.html",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/reports/taskSummaryByUser.html",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/reports/taskSummaryByUser.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/dataService.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/tasks/tasks.html",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/layout/shell.html",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/reports/config.route.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/app.module.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/tasks/tasks.module.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/reports/reports.module.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/layout/layout.module.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/routeHelper.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/core.module.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/config.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/tasks/tasks.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/tasks/config.route.js",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/AngularJS/AngularJS-sublime-package.sublime-settings",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/AngularJS/AngularJS-completions.sublime-settings",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/AngularJS/AngularJS-js-completions.sublime-settings",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/User/AngularJS-sublime-package.sublime-settings",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/User/JavaScript.sublime-settings",
+		"/C/Users/rkurz/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/layout/shell.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/sessionService.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/core/authenticationService.js",
+		"/C/xampp/htdocs/UIFrameworks/Angular/src/client/app/login/login.js",
+		"/C/Users/rkurz/Documents/SublimeText/UIFrameworks/Angular/angular.sublime-project"
+	],
+	"find":
+	{
+		"height": 23.0
+	},
+	"find_in_files":
+	{
+		"height": 90.0,
+		"where_history":
+		[
+			"C:\\xampp\\htdocs\\EncoreGroup\\erassure\\views"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"Internal File Number"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 2,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "assignment-one/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1711,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1626,
+								1626
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 315.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "assignment-one/renderer.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1760,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1379,
+								1385
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "assignment-one/shape-manipulator.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2424,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1648,
+								1648
+							]
+						],
+						"settings":
+						{
+							"auto_complete": false,
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "webGL.sublime-project",
+	"replace":
+	{
+		"height": 42.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 274.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

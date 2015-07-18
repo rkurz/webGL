@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>webGL Assignment One</title>
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 vPosition;
+
+void
+main()
+{
+    gl_Position = vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 fColor;
+
+void
+main()
+{
+    //gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+    gl_FragColor = fColor;
+}
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script type="text/javascript" src="../common/webgl-utils.js"></script>
+<script type="text/javascript" src="../common/initShaders.js"></script>
+<script type="text/javascript" src="../common/MV.js"></script>
+<script type="text/javascript" src="renderer.js"></script>
+<script type="text/javascript" src="shape-manipulator.js"></script>
+</head>   
+
+<body>
+  <div>
+    Shape:
+    <input type="radio" id="rbTriangle" name="shape" value="Triangle" onclick="onShapeChange(value)" checked />Triangle
+    <input type="radio" id="rbSquare" name="shape" value="Square" onclick="onShapeChange(value)"/>Square
+  </div>
+	<div>
+		Number of subdivisions:
+    <input id="txtSubdivisionCount" type="range" min="0" max="5" value="0" step="1" oninput="onSubdivisionChange(value)"/>
+    <output for="txtSubdivisionCount" id="lblSubdivisionCount"/>
+	</div>
+	<div>
+		Angle
+		<input id="txtAngle" type="range" min="0" max="360" value="0" step="1" oninput="onAngleChange(value)"/>
+    <output for="txtAngle" id="lblAngle"/>
+	</div>
+  <div>
+    Constant (d)
+    <input id="txtConstant" type="range" min="0.01" max="1.0" value="0.01" step="0.01" oninput="onConstantChange(value)"/>
+    <output for="txtConstant" id="lblConstant"/>
+  </div>
+  <canvas id="gl-canvas" width="512" height="512">
+    Oops ... your browser doesn't support the HTML5 canvas element
+  </canvas>
+
+  <script>
+    $(document).ready(function() {
+    	Draw();
+    });
+
+    function Draw()
+    {
+    	var canvas = $("#gl-canvas")[0];
+      var shapeName = $("input[name='shape']:checked").val();
+    	var subDivisionCount = $("#txtSubdivisionCount").val();
+    	var angle = $("#txtAngle").val();
+      var constant = $("#txtConstant").val();
+
+      shapeManipulator.initShape(shapeName);
+      var result = shapeManipulator.tessellate(subDivisionCount, angle, constant);
+
+    	renderer.draw(canvas, result.points, result.lines);
+    }
+
+    function onSubdivisionChange(value) {
+      $("#lblSubdivisionCount").val(value);
+      Draw();
+    }
+
+    function onAngleChange(value) {
+      $("#lblAngle").val(value);
+      Draw();
+    }
+
+    function onConstantChange(value) {
+      $("#lblConstant").val(value);
+      Draw();
+    }
+
+    function onShapeChange(value) {
+      Draw();
+    }
+  </script>
+</body>
+</html>
